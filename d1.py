@@ -16,6 +16,7 @@ class getCalibration:
 
     def find_num_vals(self):
         # Uses two pointers to find the first numeric char and then the second
+        # Use for part1, only checks numerical chars
         # returns int total_sum
         total_sum = 0
         for line in self.input.readlines():
@@ -60,7 +61,6 @@ class getCalibration:
                 r += 1
         return 0
 
-
     def get_first_digit(self, line):
         # reads line left to right to find first digit
         # returns an int
@@ -94,11 +94,10 @@ class getCalibration:
                 idx -= 1
         return 0
 
-    
     def find_spelled_vals(self):
         self.input = open("input.txt")
         total_sum = 0
-        
+
         for line in self.input.readlines():
             digit_1 = self.get_first_digit(line)
             digit_2 = self.get_second_digit(line)
