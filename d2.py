@@ -67,5 +67,3 @@ part1_sum = sum_game_ids(12, 13, 14, "d2input.txt")
 part2_sum = power_sum("d2input.txt")
 print("part1: ", part1_sum)    
 print("part2: ", part2_sum)
-
-
