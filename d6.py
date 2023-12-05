@@ -1,3 +1,4 @@
+import math
 def calc_wins(time, distance):
     wins = 0
     for i in range(time + 1):
@@ -5,6 +6,9 @@ def calc_wins(time, distance):
         if d > distance:
             wins += 1
     return wins
+
+def quad_form(a, b, c):
+    return (-b + math.sqrt(b**2 - 4*a*c)) // (2*a),  (-b - math.sqrt(b**2 - 4*a*c)) // (2*a)
 
 def parse_as_multiple_races(line):
     return [int(val) for val in line.split() if val.isdigit()]
@@ -23,7 +27,12 @@ def boat_races(input):
 def boat_race(input):
     lines = open(input, "r")
     data = [parse_as_one_race(line) for line in lines.readlines()]
-    return calc_wins(data[0], data[1])
+    roots = quad_form(-1, data[0], -data[1])
+    return roots[1] - roots[0]    
 
 print("part1 :", boat_races("d6input.txt"))
 print("part2 :", boat_race("d6input.txt"))
+
+34454850
+47125712
+12670862
