@@ -32,7 +32,3 @@ def boat_race(input):
 
 print("part1 :", boat_races("d6input.txt"))
 print("part2 :", boat_race("d6input.txt"))
-
-34454850
-47125712
-12670862
