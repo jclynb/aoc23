@@ -19,18 +19,21 @@ class Seed:
     
 class Maps:
     def __init__(self, soil, fert, water, light, temp, hum, loc):
-        self.soil = soil
-        self.fert = fert
-        self.water = water
-        self.light = light
-        self.temp = temp
-        self.hum = hum
-        self.loc = loc
+        self.soil = sorted(soil, key=sort_by_source)
+        self.fert = sorted(fert, key=sort_by_source)
+        self.water = sorted(water, key=sort_by_source)
+        self.light = sorted(light, key=sort_by_source)
+        self.temp = sorted(temp, key=sort_by_source)
+        self.hum = sorted(hum, key=sort_by_source)
+        self.loc = sorted(loc, key=sort_by_source)
 
 class imageRanges: 
     def __init__(self, input):
         self.dest = Range(int(input[0]), int(input[0] + int(input[2]) - 1))
         self.source = Range(int(input[1]), int(input[1]) + int(input[2]) - 1)
+
+def sort_by_source(obj):
+    return obj.source.start
 
 class Range:
     def __init__(self, start, end):
@@ -44,7 +47,6 @@ class Range:
     def overlap(self, other):
         return self.start < other.end and self.start < other.end
     
-
 def parse_seeds(input):
     seeds = []
     soil_map = []
@@ -150,60 +152,47 @@ class SeedRange:
         self.location = self.transform(map.loc, self.humidity)
 
     def transform(self, map, seed_range_numbers):
-        mapped_ranges = set()
-        for range in seed_range_numbers:
-            for image in map:
-                mapped_ranges = {check_unmapped(unmapped, image.source) for unmapped in mapped_ranges if unmapped != image.source}
 
-                # No overlap between curr_range and source_range
-                if not range.overlap(image.source):
-                    continue
-                # curr_range is inside source_range
+        mapped_ranges = set()
+        for range in seed_range_numbers: # seed ranges, soil ranges, etc
+            for i, image in enumerate(map): # images contain source-to-destination ranges 
+                # If the seed range has no overlap with the source_range
+                if not range.overlap(image.source): 
+                  continue
+                # If the seed range is inside source_range
                 elif image.source.start <= range.start and range.end <= image.source.end:
                     start = image.dest.start + (range.start - image.source.start)
                     end = image.dest.start + (range.end - image.source.start)
                     mapped_ranges.add(Range(start, end))
+                    break
                 # source_range is subset of curr_range
                 elif image.source.start <= range.start and image.source.end >= range.end:
                     mapped_range = Range(image.dest.start, image.dest.end)
-                    slice1 = Range(range.start, image.source.start - 1)
+                    sliceleft = Range(range.start, image.source.start - 1)
+                    sliceright = Range(image.source.end + 1, range.end)
+                    mapped_ranges.add(sliceleft)
                     mapped_ranges.add(mapped_range)
-                    slice2 = Range(image.source.end + 1, range.end)
-                    mapped_ranges.add(slice1)
-                    mapped_ranges.add(slice2)
+                    mapped_ranges.update(self.transform(map[i+1:], [sliceright])) # see if sliceright range overlaps with larger source ranges
+                    break
                 # curr_range overlaps only on left side
-                elif image.source.start <= range.start and range.end >= image.source.end:
+                elif image.source.start <= range.start and range.end > image.source.end:
                     mapped_range = Range(image.dest.start + (range.start - image.source.start), image.dest.end)
                     mapped_ranges.add(mapped_range)
-                    slice = Range(image.source.end + 1, range.end)
-                    mapped_ranges.add(slice)
+                    slice = Range(image.source.end + 1, range.end) 
+                    mapped_ranges.update(self.transform(map[i+1:], [slice])) # see if slice range overlaps with larger source ranges
+                    break
                 # curr_range overlaps only on right side
-                elif image.source.start >= range.start and range.end <= image.source.end:
+                elif image.source.start > range.start and range.end <= image.source.end:
                     mapped_range = Range(image.dest.start, image.dest.start + (range.end - image.source.start))
-                    slice = Range(range.start, image.source.start - 1)
+                    slice = Range(range.start, image.source.start -  1)
                     mapped_ranges.add(slice)
                     mapped_ranges.add(mapped_range)
-            
+                    break
+            # curr_range didn't overlap with any source_ranges
             if len(mapped_ranges) == 0:
-                mapped_ranges.add(Range(range.start, range.end))
-
+                mapped_ranges.add(range)
         return mapped_ranges
-    
-def cut_end(range, other):
-    range.end = other.start
-    return Range(range.start, range.end)
-def cut_start(range, other):
-    range.start = other.end
-    return Range(range.start, range.end)
-def check_unmapped(unmapped, range):
-    if unmapped.overlap(range):                                
-        if unmapped.end > range.start:
-            return cut_end(unmapped, range)
-        else:
-            return cut_start(unmapped, range)
-    else:
-        return unmapped
-    
+
 def part1(input):
     with open(input, "r") as data:
         seed_list = parse_seeds(data.read())
@@ -219,8 +208,4 @@ def part2(input):
     return min_loc
 
 print("part1: ", part1("d5input.txt"))
-print("part2: ", part2("d5test.txt"))
-# 110558445 too high
-# 357791695
-# 4294967295
-# 6295169 too low
+print("part2: ", part2("d5input.txt"))
