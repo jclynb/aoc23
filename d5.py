@@ -152,10 +152,9 @@ class SeedRange:
         self.location = self.transform(map.loc, self.humidity)
 
     def transform(self, map, seed_range_numbers):
-
         mapped_ranges = set()
-        for range in seed_range_numbers: # seed ranges, soil ranges, etc
-            for i, image in enumerate(map): # images contain source-to-destination ranges 
+        for range in seed_range_numbers: # seed ranges, soil ranges, etc, referring to this as seed_range
+            for i, image in enumerate(map): # images contain source-to-destination ranges sorted by smallest to largest source ranges
                 # If the seed range has no overlap with the source_range
                 if not range.overlap(image.source): 
                   continue
@@ -165,7 +164,7 @@ class SeedRange:
                     end = image.dest.start + (range.end - image.source.start)
                     mapped_ranges.add(Range(start, end))
                     break
-                # source_range is subset of curr_range
+                # source_range is subset of seed_range
                 elif image.source.start <= range.start and image.source.end >= range.end:
                     mapped_range = Range(image.dest.start, image.dest.end)
                     sliceleft = Range(range.start, image.source.start - 1)
@@ -174,21 +173,21 @@ class SeedRange:
                     mapped_ranges.add(mapped_range)
                     mapped_ranges.update(self.transform(map[i+1:], [sliceright])) # see if sliceright range overlaps with larger source ranges
                     break
-                # curr_range overlaps only on left side
+                # seed_range overlaps only on left side
                 elif image.source.start <= range.start and range.end > image.source.end:
                     mapped_range = Range(image.dest.start + (range.start - image.source.start), image.dest.end)
                     mapped_ranges.add(mapped_range)
                     slice = Range(image.source.end + 1, range.end) 
                     mapped_ranges.update(self.transform(map[i+1:], [slice])) # see if slice range overlaps with larger source ranges
                     break
-                # curr_range overlaps only on right side
+                # seed_range overlaps only on right side
                 elif image.source.start > range.start and range.end <= image.source.end:
                     mapped_range = Range(image.dest.start, image.dest.start + (range.end - image.source.start))
                     slice = Range(range.start, image.source.start -  1)
                     mapped_ranges.add(slice)
                     mapped_ranges.add(mapped_range)
                     break
-            # curr_range didn't overlap with any source_ranges
+            # seed_range didn't overlap with any source_ranges
             if len(mapped_ranges) == 0:
                 mapped_ranges.add(range)
         return mapped_ranges
