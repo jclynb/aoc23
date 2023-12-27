@@ -72,6 +72,7 @@ class Grid:
                 col = self.num_cols - j - 1
                 if grid.val(i, col) == "O":
                     self.move_east(i, col)
+                    
     def sum_loads(self):
         sum = 0
         sums = {}
